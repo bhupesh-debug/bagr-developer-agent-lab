@@ -7,6 +7,10 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Model: Gemma 2B/4B](https://img.shields.io/badge/Model-Gemma_2B%2F4B-orange.svg)](https://huggingface.co/google/gemma-2-2b)
 [![Tests: 8 Passed](https://img.shields.io/badge/Tests-8%20Passed-brightgreen.svg)]()
+[![Live Research Portal](https://img.shields.io/badge/Live_Research_Portal-Interactive_Demo-success?style=flat&logo=githubpages)](https://bhupesh-debug.github.io/bagr-developer-agent-lab/)
+
+> 🌐 **Live Interactive Research Portal:** **[https://bhupesh-debug.github.io/bagr-developer-agent-lab/](https://bhupesh-debug.github.io/bagr-developer-agent-lab/)**  
+> *Access the live in-browser repair simulator, interactive ablation graphs, benchmark diffs, and audited consumer hardware telemetry.*
 
 ---
 
