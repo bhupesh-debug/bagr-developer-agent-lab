@@ -1,0 +1,57 @@
+[
+  {
+    "id": "SWE-01",
+    "name": "tax_calculator",
+    "path": "benchmarks/tax_calculator",
+    "test_file": "test_tax.py",
+    "issue_description": "Luxury tax calculation error in pricing.py: When an order subtotal exceeds LUXURY_THRESHOLD ($1,000), calculate_order_tax incorrectly subtracts LUXURY_SURCHARGE instead of adding it to base_rate, resulting in underbilled taxes for luxury orders in TIER_B.",
+    "ground_truth_file": "pricing.py",
+    "ground_truth_symbol": "calculate_order_tax",
+    "original_target": "    if subtotal > LUXURY_THRESHOLD:\n        effective_rate = base_rate - LUXURY_SURCHARGE\n    else:\n        effective_rate = base_rate",
+    "replacement_code": "    if subtotal > LUXURY_THRESHOLD:\n        effective_rate = base_rate + LUXURY_SURCHARGE\n    else:\n        effective_rate = base_rate"
+  },
+  {
+    "id": "SWE-02",
+    "name": "lru_cache",
+    "path": "benchmarks/lru_cache",
+    "test_file": "test_cache.py",
+    "issue_description": "KeyError or capacity overflow during LRU eviction in store.py: In put(), when cache exceeds capacity, eviction logic mistakenly attempts to delete lru_node.value from self.cache dictionary instead of lru_node.key, failing to evict the oldest key when value does not equal key.",
+    "ground_truth_file": "store.py",
+    "ground_truth_symbol": "put",
+    "original_target": "                if lru_node.value in self.cache:\n                    del self.cache[lru_node.value]\n                elif lru_node.key in self.cache:\n                    del self.cache[lru_node.key]",
+    "replacement_code": "                if lru_node.key in self.cache:\n                    del self.cache[lru_node.key]"
+  },
+  {
+    "id": "SWE-03",
+    "name": "data_serializer",
+    "path": "benchmarks/data_serializer",
+    "test_file": "test_serializer.py",
+    "issue_description": "SchemaValidator in validator.py incorrectly rejects None values for fields where required=True and nullable=True: The condition checks 'if not field.required' when handling None instead of inspecting 'if field.nullable', causing valid nullable payloads to fail validation.",
+    "ground_truth_file": "validator.py",
+    "ground_truth_symbol": "validate",
+    "original_target": "            if val is None:\n                if not field.required:  # BUG: should check if field.nullable\n                    cleaned[name] = None\n                    continue\n                else:\n                    raise ValidationError(f\"Field {name} cannot be None\")",
+    "replacement_code": "            if val is None:\n                if field.nullable:\n                    cleaned[name] = None\n                    continue\n                else:\n                    raise ValidationError(f\"Field {name} cannot be None\")"
+  },
+  {
+    "id": "SWE-04",
+    "name": "rate_limiter",
+    "path": "benchmarks/rate_limiter",
+    "test_file": "test_limiter.py",
+    "issue_description": "Premature rate limiting in TokenBucket._replenish(): The token replenish calculation performs integer floor division 'int(elapsed // self.fill_rate_per_sec)' instead of fractional multiplication 'elapsed * self.fill_rate_per_sec', causing sub-second replenishments to be completely discarded.",
+    "ground_truth_file": "bucket.py",
+    "ground_truth_symbol": "_replenish",
+    "original_target": "        replenished = int(elapsed // self.fill_rate_per_sec)\n        self.tokens = min(self.capacity, self.tokens + replenished)",
+    "replacement_code": "        replenished = elapsed * self.fill_rate_per_sec\n        self.tokens = min(self.capacity, self.tokens + replenished)"
+  },
+  {
+    "id": "SWE-05",
+    "name": "graph_cycles",
+    "path": "benchmarks/graph_cycles",
+    "test_file": "test_cycles.py",
+    "issue_description": "False positive cycle detection in CycleDetector._dfs(): In detector.py, recursion stack tracking adds nodes to self.rec_stack but omits removal on DFS unwinding, causing valid Directed Acyclic Graphs with diamond paths to be incorrectly flagged as containing cycles.",
+    "ground_truth_file": "detector.py",
+    "ground_truth_symbol": "_dfs",
+    "original_target": "        # Logic Bug: Forgot to backtrack and remove current.name from self.rec_stack!\n        # self.rec_stack.remove(current.name) is omitted, causing diamond DAG paths to be falsely marked as cycles!\n        return False",
+    "replacement_code": "        self.rec_stack.remove(current.name)\n        return False"
+  }
+]

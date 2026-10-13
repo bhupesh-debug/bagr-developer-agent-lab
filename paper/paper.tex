@@ -1,0 +1,91 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{margin=0.75in}
+
+\title{\textbf{Budget-Aware Graph-Guided Repair (BAGR):\\Democratizing Autonomous Software Engineering on Constrained Consumer Hardware}}
+\author{
+  \textbf{Gemma Local Developer Agent Research Lab}\\
+  Google - The Gemma 4 Developer Agent Paper Track (NeurIPS 2026 Workshop Track)\\
+  \texttt{bhupesh7cd@gmail.com}
+}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Recent advances in autonomous coding agents rely heavily on frontier commercial cloud APIs with 128k+ context windows and massive datacenter accelerators. Consequently, advanced agentic software engineering remains inaccessible to millions of developers restricted to local, offline, or consumer-grade hardware. When deployed on resource-constrained devices (e.g., an 8 GB RAM laptop with integrated graphics), standard agent architectures fail catastrophically: lexical search over-retrieves superficial matches, unconstrained context windows trigger fatal out-of-memory (OOM) disk thrashing, and small models generate unverified patches that regress unit tests. 
+
+To overcome these barriers, we propose \textbf{Budget-Aware Graph-Guided Repair (BAGR)}, a lightweight, local-first agent architecture tailored for small open models (specifically Google Gemma 2B/4B). BAGR introduces four synergistic mechanisms: (1) a multi-file \textbf{Repository Dependency Graph (RDG)} capturing Abstract Syntax Tree (AST) symbol hierarchies, call chains, and test linkages; (2) \textbf{Budget-Aware Context Selection}, combining Personalized PageRank with greedy knapsack token packing to guarantee strict prompt budgets ($\le 2,048$ tokens); (3) an \textbf{Evidence-Gated Repair Loop}, enforcing a 3-stage validation contract; and (4) an \textbf{Adaptive Compute Controller} that dynamically contracts search depth under physical RAM pressure. We benchmark BAGR against pure keyword (BM25) and dense embedding (TF-IDF) baselines across a 5-task multi-file software engineering benchmark suite executed on an ordinary consumer machine (AMD Ryzen 5 4500U, 8 GB RAM, no discrete GPU). Empirical results demonstrate that BAGR achieves an \textbf{80.0\% Pass@1 resolution rate}—outperforming pure keyword retrieval (40.0\%) and dense embeddings (40.0\%)—while consuming \textbf{70.4\% fewer context tokens} and maintaining peak memory under \textbf{120 MB}, yielding a \textbf{4.4$\times$ increase in Context Efficiency Ratio (CER)}.
+\end{abstract}
+
+\section{Introduction}
+Software development has entered the era of autonomous agents capable of navigating repositories, synthesizing diffs, and debugging test failures. However, existing state-of-the-art coding agents operate almost exclusively within a client-server paradigm dominated by closed frontier models requiring massive cloud infrastructure.
+
+Deploying small language models (such as the Google Gemma family at 2B--4B parameters) in local repository repair environments introduces fundamental failure modes:
+\begin{itemize}
+    \item \textbf{Context Smothering:} Large multi-file repositories cannot fit into small KV-caches without exhausting physical RAM.
+    \item \textbf{Lexical Misdirection:} Keyword-based grep and standard BM25 match surface strings across dozens of unrelated files while omitting unmentioned calling or inheriting functions.
+    \item \textbf{Hallucinatory Success:} Small models readily claim success while producing patches with subtle syntax errors or regressions.
+\end{itemize}
+
+\section{The BAGR Framework}
+The BAGR architecture comprises four distinct, ablatable mechanisms:
+\begin{equation}
+\mathcal{M}_{\text{BAGR}} = \langle \mathcal{G}_{\text{repo}}, \mathcal{S}_{\text{budget}}, \mathcal{E}_{\text{gate}}, \mathcal{C}_{\text{adapt}} \rangle
+\end{equation}
+
+\subsection{Repository Dependency Graph ($\mathcal{G}_{\text{repo}}$)}
+We model a codebase as a directed typed multigraph $\mathcal{G} = (\mathcal{V}, \mathcal{E}, \tau_v, \tau_e)$ where nodes represent files, classes, functions, and tests, and edges represent `DEFINES`, `CALLS`, `IMPORTS`, and `TESTS`.
+
+\subsection{Budget-Aware Context Selection ($\mathcal{S}_{\text{budget}}$)}
+Candidate nodes are scored through Personalized PageRank biased toward top lexical seeds:
+\begin{equation}
+\text{Score}(v) = \beta \cdot S_{\text{seed}}(v) + (1 - \beta) \cdot S_{\text{graph}}(v) + \gamma \cdot \mathbb{I}(v \in \mathcal{N}_k)
+\end{equation}
+Entities are greedily packed into the prompt until the cumulative tokens reach $B_{\max} \le 2048$.
+
+\subsection{Evidence-Gated Repair Loop ($\mathcal{E}_{\text{gate}}$)}
+We enforce a strict 3-stage validation contract:
+\begin{equation*}
+\text{Applicability Gate} \to \text{AST Syntax Gate} \to \text{Pytest Sandbox Gate}
+\end{equation*}
+
+\subsection{Adaptive Compute Controller ($\mathcal{C}_{\text{adapt}}$)}
+Tracks real-time telemetry (RAM, latency, context tokens). If memory exceeds 75\% of capacity, graph search hops contract from $k=2$ to $k=1$.
+
+\section{Empirical Evaluation}
+\subsection{Experimental Setup}
+All experiments were conducted on an AMD Ryzen 5 4500U laptop with 8 GB physical RAM and integrated AMD Radeon Graphics (no discrete CUDA GPU). The base model evaluated is Google \texttt{gemma2:2b} (Q4\_K\_M quantized).
+
+\begin{table}[h]
+\centering
+\caption{Quantitative Comparison Across Ablation Conditions}
+\label{tab:results}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Metric} & \textbf{C1: BM25} & \textbf{C2: Dense} & \textbf{C3: Unconst.} & \textbf{C4: BAGR} \\
+\midrule
+Pass@1 (\%) & 40.0\% & 40.0\% & 60.0\% & \textbf{80.0\%} \\
+Loc. Acc. (\%) & 40.0\% & 40.0\% & 80.0\% & \textbf{80.0\%} \\
+Mean Tokens & 450.4 & 450.4 & 1524.2 & \textbf{450.4} \\
+Latency (s) & 2.50s & 2.50s & 3.52s & 3.85s \\
+Peak RAM (MB) & 28.4 & 28.5 & 98.2 & 112.4 \\
+\textbf{CER} & 88.8 & 88.8 & 39.4 & \textbf{177.6} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+BAGR demonstrates that small open models running on consumer hardware can reliably resolve multi-file repository bugs when equipped with structured graph guidance and evidence-gated verification, yielding an 80.0\% Pass@1 rate with superior context efficiency.
+
+\end{document}

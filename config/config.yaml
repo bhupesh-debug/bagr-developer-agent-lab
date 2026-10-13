@@ -1,0 +1,33 @@
+# BAGR: Budget-Aware Graph-Guided Repair Configuration
+system:
+  lab_name: "Gemma 4 Local Developer Agent Research Lab"
+  track: "Google - The Gemma 4 Developer Agent Paper Track"
+  device: "Consumer Hardware Profile (AMD Ryzen 5 4500U, 8GB RAM, Windows 11)"
+
+llm:
+  model_name: "gemma2:2b"
+  backend: "ollama"
+  endpoint: "http://127.0.0.1:11434"
+  context_window_limit: 4096
+  quantization: "Q4_K_M GGUF"
+  temperature: 0.1
+  top_p: 0.9
+
+retrieval:
+  default_token_budget: 2048
+  graph_k_hops: 2
+  lexical_weight: 0.45
+  graph_weight: 0.55
+  pagerank_alpha: 0.85
+
+repair:
+  max_retries: 3
+  timeout_per_test_seconds: 20
+  enforce_ast_syntax_gate: true
+  enforce_isolated_pytest_gate: true
+  automatic_rollback: true
+
+controller:
+  ram_ceiling_mb: 6500.0
+  latency_ceiling_seconds: 180.0
+  memory_throttle_ratio: 0.75
