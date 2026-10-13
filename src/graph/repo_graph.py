@@ -248,19 +248,18 @@ class RepoGraph:
             return {}
 
         valid_seeds = [s for s in seed_nodes if s in self.graph]
-        if not valid_seeds:
-            # Fall back to uniform PageRank
-            return nx.pagerank(self.graph, alpha=alpha)
-
-        personalization = {n: 0.0 for n in self.graph.nodes()}
-        weight = 1.0 / len(valid_seeds)
-        for s in valid_seeds:
-            personalization[s] = weight
-
         try:
+            if not valid_seeds:
+                return nx.pagerank(self.graph, alpha=alpha)
+
+            personalization = {n: 0.0 for n in self.graph.nodes()}
+            weight = 1.0 / len(valid_seeds)
+            for s in valid_seeds:
+                personalization[s] = weight
+
             return nx.pagerank(self.graph, alpha=alpha, personalization=personalization, max_iter=100)
         except Exception:
-            # Fallback if convergence fails on tiny disconnected graph
+            # Fallback if scipy is missing or convergence fails on disconnected graph
             return {n: (1.0 if n in valid_seeds else 0.1) for n in self.graph.nodes()}
 
     def summary(self) -> Dict[str, Any]:

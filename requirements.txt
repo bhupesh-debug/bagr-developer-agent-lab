@@ -1,6 +1,7 @@
 # Core Graph and Numerical Libraries
 networkx>=3.2.0
 numpy>=1.26.0
+scipy>=1.11.0
 
 # Language Model and Formatting
 pydantic>=2.6.0
